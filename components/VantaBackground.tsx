@@ -16,54 +16,49 @@ export default function VantaBackground() {
   const [vantaEffect, setVantaEffect] = useState<any>(null);
   const [scriptsLoaded, setScriptsLoaded] = useState(false);
 
-  // DEBUGGING: Check if Vanta object is available
-  if (typeof window !== 'undefined' && window.VANTA) {
-      console.log("VANTA is available on the window.");
-  }
-
-
   // Initialize Vanta once scripts are loaded
   useEffect(() => {
-    if (!scriptsLoaded) {
-        // console.log("Scripts not yet marked as loaded."); // Debugging
-        return;
-    } 
+    if (!scriptsLoaded) return;
 
-    if (window.VANTA && !vantaEffect && vantaRef.current) {
-      console.log("Initializing Vanta.TRUNK...");
-      setVantaEffect(
-        window.VANTA.TRUNK({
-          el: vantaRef.current,
-          mouseControls: true,
-          touchControls: true,
-          gyroControls: false,
-          minHeight: 200.00,
-          minWidth: 200.00,
-          scale: 1.00,
-          scaleMobile: 1.00,
-          
-          // PLOCCHE AESTHETIC SETTINGS
-          color: 0x1A1A1A,
-          backgroundColor: 0xF4F4F0,
-          spacing: 0,
-          chaos: 1.5,
-        })
-      );
-    }
+    // --- NEW: Add a timeout to wait for global script execution ---
+    const timer = setTimeout(() => {
+      if (window.VANTA && vantaRef.current) {
+        if (!vantaEffect) {
+          setVantaEffect(
+            window.VANTA.TRUNK({
+              el: vantaRef.current,
+              mouseControls: true,
+              touchControls: true,
+              gyroControls: false,
+              minHeight: 200.00,
+              minWidth: 200.00,
+              scale: 1.00,
+              scaleMobile: 1.00,
+              
+              // PLOCCHE AESTHETIC SETTINGS
+              color: 0x1A1A1A,
+              backgroundColor: 0xF4F4F0,
+              spacing: 0,
+              chaos: 1.5,
+            })
+          );
+        }
+      }
+    }, 500); // 500ms delay to ensure scripts are fully registered
 
     // Cleanup on unmount
     return () => {
+      clearTimeout(timer);
       if (vantaEffect) {
-        console.log("Destroying Vanta effect.");
         vantaEffect.destroy();
       }
     };
   }, [scriptsLoaded, vantaEffect]);
 
+  // We are using the internal onload hook on the second script to trigger scriptsLoaded = true
   return (
     <>
       {/* 1. Load Dependencies from CDN */}
-      {/* CHANGED TO afterInteractive to force earlier loading */}
       <Script 
         src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.min.js" 
         strategy="afterInteractive" 
@@ -71,9 +66,8 @@ export default function VantaBackground() {
       {/* Load Vanta Trunk */}
       <Script
         src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.trunk.min.js"
-        strategy="afterInteractive" // <-- CHANGED
+        strategy="afterInteractive" 
         onLoad={() => {
-            console.log("Vanta script loaded.");
             setScriptsLoaded(true);
         }}
       />
