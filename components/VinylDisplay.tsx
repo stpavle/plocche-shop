@@ -1,0 +1,66 @@
+import Image from "next/image";
+
+interface VinylProps {
+  title?: string;
+  artist?: string;
+  price?: string;
+  color?: string;
+  imageUrl?: string; // CHANGED: Now just a simple string
+}
+
+export default function VinylDisplay({ 
+  title = "Unknown Artist", 
+  artist = "Sarajevo Sessions", 
+  price = "35 KM",
+  color = "#FF4D00",
+  imageUrl // usage
+}: VinylProps) {
+  return (
+    <div className="group relative w-64 h-64 md:w-72 md:h-72 cursor-pointer mx-auto">
+      
+      {/* 1. The Vinyl Disc */}
+      <div className="absolute top-2 right-2 w-[90%] h-[90%] rounded-full bg-black flex items-center justify-center transition-transform duration-500 ease-out group-hover:translate-x-12 group-hover:rotate-90 shadow-xl">
+        <div className="w-1/3 h-1/3 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
+          <div className="w-2 h-2 bg-black rounded-full"></div>
+        </div>
+        <div className="absolute inset-0 rounded-full border-4 border-white/5"></div>
+        <div className="absolute inset-4 rounded-full border border-white/5"></div>
+      </div>
+
+      {/* 2. The Album Cover */}
+      <div className="relative w-full h-full bg-worn border border-ink/10 shadow-lg z-10 overflow-hidden flex flex-col justify-between p-4 transition-transform duration-300 group-hover:-translate-y-1 bg-paper">
+        
+        <div className="flex justify-between items-start relative z-20">
+          <span className="font-mono text-xs uppercase tracking-widest text-ink/60 bg-paper/80 backdrop-blur-sm px-1">Stereo</span>
+          <span className="font-mono text-xs font-bold text-ink bg-paper/80 backdrop-blur-sm px-1">{price}</span>
+        </div>
+
+        {/* IMAGE LOGIC SIMPLIFIED */}
+        <div className="absolute inset-0 z-0">
+            {imageUrl ? (
+                <Image 
+                    src={imageUrl} 
+                    alt={title}
+                    fill
+                    className="object-cover opacity-90 mix-blend-multiply grayscale contrast-125 transition-all duration-500 ease-in-out group-hover:grayscale-0 group-hover:opacity-100 group-hover:contrast-100"
+                />
+            ) : (
+                <div className="w-full h-full opacity-10 mix-blend-multiply pointer-events-none">
+                    <svg width="100%" height="100%">
+                        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="1"/>
+                        </pattern>
+                        <rect width="100%" height="100%" fill="url(#grid)" />
+                    </svg>
+                </div>
+            )}
+        </div>
+
+        <div className="relative z-20 bg-paper/80 backdrop-blur-sm p-1 inline-block mt-auto w-fit">
+          <h3 className="font-bold uppercase text-2xl leading-none break-words hyphens-auto">{title}</h3>
+          <p className="font-mono text-xs mt-2 text-ink/60 uppercase">{artist}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
