@@ -1,0 +1,65 @@
+import { defineField, defineType } from 'sanity'
+
+export default defineType({
+  name: 'order',
+  title: 'Orders',
+  type: 'document',
+  fields: [
+    defineField({
+      name: 'orderNumber',
+      title: 'Order Number',
+      type: 'string',
+    }),
+    defineField({
+      name: 'customerName',
+      title: 'Customer Name',
+      type: 'string',
+    }),
+    defineField({
+      name: 'phone',
+      title: 'Phone Number',
+      type: 'string',
+    }),
+    // ------------------------
+    defineField({
+      name: 'email', 
+      title: 'Email',
+      type: 'string',
+    }),
+    
+    defineField({
+      name: 'address',
+      title: 'Shipping Address',
+      type: 'text',
+    }),
+    defineField({
+      name: 'items',
+      title: 'Purchased Items',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'title', type: 'string' },
+            { name: 'price', type: 'string' }, // We keep the snapshot price at time of purchase
+            { name: 'productId', type: 'string' },
+          ]
+        }
+      ]
+    }),
+    defineField({
+      name: 'status',
+      title: 'Order Status',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Pending', value: 'pending' },
+          { title: 'Shipped', value: 'shipped' },
+          { title: 'Delivered', value: 'delivered' },
+          { title: 'Cancelled', value: 'cancelled' },
+        ],
+      },
+      initialValue: 'pending'
+    }),
+  ],
+})
