@@ -1,8 +1,8 @@
 import { client } from "../../lib/sanity";
-import ShopBrowser from "../../components/ShopBrowser"; // <--- Import the new component
+import ShopBrowser from "../../components/ShopBrowser"; 
 
-// Fetch Logic (Stays on Server for SEO)
 const getData = async () => {
+  // Added 'origin' and 'genre' to the query
   const query = `*[_type == "product" && stock > 0] | order(_createdAt desc) {
     _id,
     title,
@@ -10,7 +10,9 @@ const getData = async () => {
     price,
     "imageUrl": image.asset->url, 
     labelColor,
-    slug
+    slug,
+    origin,
+    genre
   }`;
   const data = await client.fetch(query);
   return data;
@@ -21,7 +23,6 @@ export default async function ShopPage() {
 
   return (
     <div className="min-h-screen p-6 md:p-12">
-      {/* We pass the data to the Client Component to handle interactivity */}
       <ShopBrowser products={products} />
     </div>
   );

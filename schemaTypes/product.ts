@@ -102,5 +102,36 @@ export default defineType({
       type: 'string',
       initialValue: '#FF4D00'
     }),
+    defineField({
+      name: 'origin',
+      title: 'Origin / Category',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Balkan (Domaća)', value: 'balkan' },
+          { title: 'Worldwide (Strana)', value: 'worldwide' },
+        ],
+        layout: 'radio' // Shows as radio buttons instead of dropdown
+      },
+      initialValue: 'worldwide'
+    }),
+    defineField({
+      name: 'genre',
+      title: 'Genre',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Rock', value: 'Rock' },
+          { title: 'Pop', value: 'Pop' },
+          { title: 'Jazz', value: 'Jazz' },
+          { title: 'Funk & Soul', value: 'Funk & Soul' },
+          { title: 'Electronic', value: 'Electronic' },
+          { title: 'Hip Hop', value: 'Hip Hop' },
+          { title: 'Folk / Narodna', value: 'Folk' },
+          { title: 'Classical', value: 'Classical' },
+          { title: 'Reggae', value: 'Reggae' },
+        ],
+      },
+    }),
   ],
 })
