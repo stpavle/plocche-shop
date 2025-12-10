@@ -5,7 +5,8 @@ interface VinylProps {
   artist?: string;
   price?: string;
   color?: string;
-  imageUrl?: string; // CHANGED: Now just a simple string
+  imageUrl?: string; 
+  stock?: number; // <--- NEW PROP
 }
 
 export default function VinylDisplay({ 
@@ -13,13 +14,17 @@ export default function VinylDisplay({
   artist = "Sarajevo Sessions", 
   price = "35 KM",
   color = "#FF4D00",
-  imageUrl // usage
+  imageUrl,
+  stock = 1, // Default to 1 to be safe
 }: VinylProps) {
+  
+  const isSoldOut = stock === 0;
+
   return (
     <div className="group relative w-64 h-64 md:w-72 md:h-72 cursor-pointer mx-auto">
       
-      {/* 1. The Vinyl Disc */}
-      <div className="absolute top-2 right-2 w-[90%] h-[90%] rounded-full bg-black flex items-center justify-center transition-transform duration-500 ease-out group-hover:translate-x-12 group-hover:rotate-90 shadow-xl">
+      {/* 1. The Vinyl Disc - Don't animate if sold out */}
+      <div className={`absolute top-2 right-2 w-[90%] h-[90%] rounded-full bg-black flex items-center justify-center transition-transform duration-500 ease-out shadow-xl ${!isSoldOut ? 'group-hover:translate-x-12 group-hover:rotate-90' : ''}`}>
         <div className="w-1/3 h-1/3 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
           <div className="w-2 h-2 bg-black rounded-full"></div>
         </div>
@@ -28,21 +33,30 @@ export default function VinylDisplay({
       </div>
 
       {/* 2. The Album Cover */}
-      <div className="relative w-full h-full bg-worn border border-ink/10 shadow-lg z-10 overflow-hidden flex flex-col justify-between p-4 transition-transform duration-300 group-hover:-translate-y-1 bg-paper">
+      <div className={`relative w-full h-full border border-ink/10 shadow-lg z-10 overflow-hidden flex flex-col justify-between p-4 transition-transform duration-300 bg-paper ${!isSoldOut ? 'group-hover:-translate-y-1' : ''}`}>
         
+        {/* SOLD OUT OVERLAY */}
+        {isSoldOut && (
+            <div className="absolute inset-0 z-50 bg-paper/60 backdrop-blur-[2px] flex items-center justify-center">
+                <span className="bg-ink text-paper px-4 py-2 font-mono font-bold uppercase tracking-widest text-sm -rotate-12 border border-paper">
+                    Sold Out
+                </span>
+            </div>
+        )}
+
         <div className="flex justify-between items-start relative z-20">
           <span className="font-mono text-xs uppercase tracking-widest text-ink/60 bg-paper/80 backdrop-blur-sm px-1">Stereo</span>
           <span className="font-mono text-xs font-bold text-ink bg-paper/80 backdrop-blur-sm px-1">{price}</span>
         </div>
 
-        {/* IMAGE LOGIC SIMPLIFIED */}
+        {/* IMAGE LOGIC - Grayscale if sold */}
         <div className="absolute inset-0 z-0">
             {imageUrl ? (
                 <Image 
                     src={imageUrl} 
                     alt={title}
                     fill
-                    className="object-cover opacity-90 mix-blend-multiply grayscale contrast-125 transition-all duration-500 ease-in-out group-hover:grayscale-0 group-hover:opacity-100 group-hover:contrast-100"
+                    className={`object-cover opacity-90 mix-blend-multiply grayscale contrast-125 transition-all duration-500 ease-in-out ${!isSoldOut && 'group-hover:grayscale-0 group-hover:opacity-100 group-hover:contrast-100'}`}
                 />
             ) : (
                 <div className="w-full h-full opacity-10 mix-blend-multiply pointer-events-none">

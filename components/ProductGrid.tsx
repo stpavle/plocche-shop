@@ -2,7 +2,7 @@
 
 import VinylDisplay from "./VinylDisplay";
 import { useCart } from "../context/CartContext";
-import Link from "next/link"; // Import Link
+import Link from "next/link"; 
 
 interface Product {
   _id: string;
@@ -11,7 +11,8 @@ interface Product {
   price: number;
   imageUrl: string; 
   labelColor: string;
-  slug: { current: string }; // We need the slug to know where to go
+  slug: { current: string };
+  stock: number; // <--- Added stock
 }
 
 export default function ProductGrid({ products }: { products: Product[] }) {
@@ -21,7 +22,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-20 pb-24">
       {products.map((record) => (
         <div key={record._id} className="flex flex-col gap-4">
-           {/* Wrap the Display in a Link to the product page */}
+           
            <Link href={`/product/${record.slug.current}`}>
              <VinylDisplay 
                 title={record.title} 
@@ -29,20 +30,28 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                 price={`${record.price} KM`} 
                 color={record.labelColor}
                 imageUrl={record.imageUrl} 
+                stock={record.stock} // <--- Pass Stock
              />
            </Link>
            
-           <button 
-              onClick={() => addToCart({
-                  id: parseInt(record._id) || Math.random(), 
-                  title: record.title,
-                  price: `${record.price} KM`,
-                  artist: record.artist
-              })}
-              className="mx-auto text-xs font-mono uppercase tracking-widest border-b border-transparent hover:border-accent hover:text-accent transition-all"
-           >
-              + Add to Cart
-           </button>
+           {/* Disable button if sold out */}
+           {record.stock > 0 ? (
+               <button 
+                  onClick={() => addToCart({
+                      id: record._id,
+                      title: record.title,
+                      price: `${record.price} KM`,
+                      artist: record.artist
+                  })}
+                  className="mx-auto text-xs font-mono uppercase tracking-widest border-b border-transparent hover:border-accent hover:text-accent transition-all"
+               >
+                  + Add to Cart
+               </button>
+           ) : (
+               <span className="mx-auto text-xs font-mono uppercase tracking-widest text-ink/30 cursor-not-allowed">
+                  Sold Out
+               </span>
+           )}
         </div>
       ))}
     </div>

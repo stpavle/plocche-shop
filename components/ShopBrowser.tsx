@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, ArrowUpDown } from "lucide-react";
 import ProductGrid from "./ProductGrid";
 
 interface Product {
@@ -12,34 +12,42 @@ interface Product {
   imageUrl: string;
   labelColor: string;
   slug: { current: string };
-  origin?: string; // New field
-  genre?: string;  // New field
+  origin?: string;
+  genre?: string;
+  stock: number;
 }
 
 export default function ShopBrowser({ products }: { products: Product[] }) {
   const [query, setQuery] = useState("");
   const [selectedOrigin, setSelectedOrigin] = useState<string | null>(null);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<"newest" | "price_asc" | "price_desc">("newest"); // <--- SORT STATE
 
-  // Get unique genres from products for the dropdown/list
   const availableGenres = Array.from(new Set(products.map(p => p.genre).filter(Boolean)));
 
-  // --- FILTERING LOGIC ---
-  const filteredProducts = products.filter((product) => {
-    const search = query.toLowerCase();
-    const matchesSearch = 
-      product.title.toLowerCase().includes(search) ||
-      product.artist.toLowerCase().includes(search);
-    
-    const matchesOrigin = selectedOrigin ? product.origin === selectedOrigin : true;
-    const matchesGenre = selectedGenre ? product.genre === selectedGenre : true;
+  // --- FILTERING & SORTING LOGIC ---
+  const filteredProducts = products
+    .filter((product) => {
+        const search = query.toLowerCase();
+        const matchesSearch = 
+          product.title.toLowerCase().includes(search) ||
+          product.artist.toLowerCase().includes(search);
+        
+        const matchesOrigin = selectedOrigin ? product.origin === selectedOrigin : true;
+        const matchesGenre = selectedGenre ? product.genre === selectedGenre : true;
 
-    return matchesSearch && matchesOrigin && matchesGenre;
-  });
+        return matchesSearch && matchesOrigin && matchesGenre;
+    })
+    .sort((a, b) => {
+        // Sort Logic
+        if (sortOrder === "price_asc") return a.price - b.price;
+        if (sortOrder === "price_desc") return b.price - a.price;
+        return 0; // Default (Newest) relies on Sanity's initial fetch order
+    });
 
   return (
     <div>
-      {/* --- HEADER & CONTROLS --- */}
+      {/* --- HEADER --- */}
       <div className="mb-12 pt-12 border-b border-ink/10 pb-8">
         
         {/* Title & Count */}
@@ -69,40 +77,20 @@ export default function ShopBrowser({ products }: { products: Product[] }) {
         </div>
 
         {/* --- FILTERS ROW --- */}
-        <div className="flex flex-col md:flex-row gap-8 font-mono text-xs uppercase tracking-widest">
+        <div className="flex flex-col md:flex-row gap-8 font-mono text-xs uppercase tracking-widest items-start md:items-center">
           
-          {/* Origin Filter */}
+          {/* Origin */}
           <div className="flex gap-4 items-center">
             <span className="text-ink/40">Region:</span>
-            <button 
-              onClick={() => setSelectedOrigin(null)}
-              className={`${!selectedOrigin ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}
-            >
-              All
-            </button>
-            <button 
-              onClick={() => setSelectedOrigin("balkan")}
-              className={`${selectedOrigin === "balkan" ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}
-            >
-              Balkan
-            </button>
-            <button 
-              onClick={() => setSelectedOrigin("worldwide")}
-              className={`${selectedOrigin === "worldwide" ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}
-            >
-              Worldwide
-            </button>
+            <button onClick={() => setSelectedOrigin(null)} className={`${!selectedOrigin ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>All</button>
+            <button onClick={() => setSelectedOrigin("balkan")} className={`${selectedOrigin === "balkan" ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>Balkan</button>
+            <button onClick={() => setSelectedOrigin("worldwide")} className={`${selectedOrigin === "worldwide" ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>Worldwide</button>
           </div>
 
-          {/* Genre Filter */}
+          {/* Genre */}
           <div className="flex gap-4 items-center flex-wrap">
             <span className="text-ink/40">Genre:</span>
-            <button 
-                onClick={() => setSelectedGenre(null)}
-                className={`${!selectedGenre ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}
-            >
-                All
-            </button>
+            <button onClick={() => setSelectedGenre(null)} className={`${!selectedGenre ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>All</button>
             {availableGenres.map(genre => (
                 <button 
                     key={genre}
@@ -113,12 +101,26 @@ export default function ShopBrowser({ products }: { products: Product[] }) {
                 </button>
             ))}
           </div>
+            
+          {/* SORTING (Right Aligned) */}
+          <div className="flex items-center gap-2 md:ml-auto border-l border-ink/10 pl-8 md:pl-0 md:border-none">
+             <ArrowUpDown size={14} className="text-ink/40"/>
+             <select 
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as any)}
+                className="bg-transparent border-none outline-none cursor-pointer text-ink hover:text-accent uppercase font-mono text-xs tracking-widest"
+             >
+                <option value="newest">Newest First</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+             </select>
+          </div>
 
-          {/* Clear Button (Only shows if filters active) */}
+          {/* Clear Button */}
           {(selectedOrigin || selectedGenre || query) && (
             <button 
                 onClick={() => { setSelectedOrigin(null); setSelectedGenre(null); setQuery(""); }}
-                className="ml-auto text-red-500 flex items-center gap-1 hover:opacity-70"
+                className="text-red-500 flex items-center gap-1 hover:opacity-70"
             >
                 <X size={14} /> Clear
             </button>

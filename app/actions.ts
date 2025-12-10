@@ -6,31 +6,24 @@ const writeClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   apiVersion: "2024-01-01",
-  token: process.env.SANITY_API_TOKEN, // Needs the Editor token from .env.local
+  token: process.env.SANITY_API_TOKEN,
   useCdn: false,
 });
 
 export async function createOrder(formData: any, cartItems: any[]) {
   try {
-    // Start a Transaction (This ensures all changes happen together)
     const transaction = writeClient.transaction();
 
-    // 1. Create the Order Document
+    // 1. Create Order
     const orderId = `order-${Date.now()}`;
-    
     transaction.create({
       _id: orderId,
       _type: "order",
       orderNumber: `ORD-${Date.now()}`,
       customerName: `${formData.firstName} ${formData.lastName}`,
-      
-      // SAVING THE EMAIL HERE
       email: formData.email, 
-      
-      // Combine address + phone for easier reading in dashboard
       address: `${formData.address}, ${formData.postalCode} ${formData.city}`,
-      phone: formData.phone, // Ensure your Order Schema has a 'phone' field, or remove this line
-      
+      phone: formData.phone,
       status: "pending",
       items: cartItems.map((item) => ({
         _key: Math.random().toString(36).substring(7),
@@ -40,18 +33,28 @@ export async function createOrder(formData: any, cartItems: any[]) {
       })),
     });
 
-    // 2. Decrease Stock for EACH item purchased
-    cartItems.forEach((item) => {
-      // We assume item.id is the Sanity _id
-      if (item.id) {
-        // "dec" means decrement (subtract)
-        transaction.patch(item.id.toString(), (p) => p.dec({ stock: 1 }));
+    // 2. SMART STOCK DECREASE & SOLD OUT TIMESTAMP
+    const productIds = cartItems.map((item) => item.id);
+    const currentProducts = await writeClient.fetch(
+      `*[_id in $ids] { _id, stock }`, 
+      { ids: productIds }
+    );
+
+    cartItems.forEach((cartItem) => {
+      const productInDb = currentProducts.find((p: any) => p._id === cartItem.id);
+      
+      if (productInDb) {
+        // Decrease stock
+        const patch = transaction.patch(cartItem.id.toString()).dec({ stock: 1 });
+
+        // If this specific purchase makes it 0, stamp it!
+        if (productInDb.stock - 1 <= 0) {
+            patch.set({ soldOutAt: new Date().toISOString() });
+        }
       }
     });
 
-    // 3. Commit (Run everything)
     await transaction.commit();
-
     return { success: true, orderId };
   } catch (error) {
     console.error("Sanity Write Error:", error);

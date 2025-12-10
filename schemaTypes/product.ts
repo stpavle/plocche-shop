@@ -21,7 +21,7 @@ export default defineType({
       name: 'isFeatured',
       title: 'Feature on Homepage',
       type: 'boolean',
-      description: 'Toggle this ON to show this record on the landing page (Only the newest one toggled ON will show)',
+      description: 'Toggle this ON to show this record on the landing page',
       initialValue: false,
     }),
     defineField({
@@ -43,8 +43,47 @@ export default defineType({
       name: 'stock',
       title: 'Stock Quantity',
       type: 'number',
-      initialValue: 1, // Default is 1 (Unique)
+      initialValue: 1,
       validation: (rule) => rule.min(0),
+    }),
+    defineField({
+      name: 'soldOutAt',
+      title: 'Sold Out Timestamp',
+      type: 'datetime',
+      readOnly: true, 
+      description: 'Automatically set when stock hits 0. Used to hide items after 30 days.'
+    }),
+    defineField({
+      name: 'origin',
+      title: 'Origin (Category)',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Balkan (Domaća)', value: 'balkan' },
+          { title: 'Worldwide (Strana)', value: 'worldwide' },
+        ],
+        layout: 'radio'
+      },
+      initialValue: 'worldwide'
+    }),
+    defineField({
+      name: 'genre',
+      title: 'Genre',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Rock', value: 'Rock' },
+          { title: 'Pop', value: 'Pop' },
+          { title: 'Jazz', value: 'Jazz' },
+          { title: 'Funk & Soul', value: 'Funk & Soul' },
+          { title: 'Electronic', value: 'Electronic' },
+          { title: 'Hip Hop', value: 'Hip Hop' },
+          { title: 'Folk / Narodna', value: 'Folk' },
+          { title: 'Classical', value: 'Classical' },
+          { title: 'Reggae', value: 'Reggae' },
+          { title: 'Soundtrack', value: 'Soundtrack' },
+        ],
+      },
     }),
     defineField({
       name: 'year',
@@ -55,7 +94,6 @@ export default defineType({
       name: 'pressing',
       title: 'Pressing Info / Label',
       type: 'string', 
-      description: 'e.g., Jugoton LSY-63021, 1st Press, or UK Import',
     }),
     defineField({
       name: 'condition',
@@ -78,60 +116,24 @@ export default defineType({
       type: 'text', 
       rows: 10,
     }),
-    // Main Cover (Used for the grid)
     defineField({
       name: 'image',
       title: 'Main Cover Art',
       type: 'image',
       options: { hotspot: true },
     }),
-    // --- NEW: GALLERY ARRAY ---
     defineField({
       name: 'gallery',
-      title: 'Extra Photos (Back, Disc, Damages)',
+      title: 'Extra Photos',
       type: 'array',
       of: [{ type: 'image', options: { hotspot: true } }],
-      options: {
-        layout: 'grid',
-      }
+      options: { layout: 'grid' }
     }),
-    // --------------------------
     defineField({
       name: 'labelColor',
       title: 'Center Label Color',
       type: 'string',
       initialValue: '#FF4D00'
-    }),
-    defineField({
-      name: 'origin',
-      title: 'Origin / Category',
-      type: 'string',
-      options: {
-        list: [
-          { title: 'Balkan (Domaća)', value: 'balkan' },
-          { title: 'Worldwide (Strana)', value: 'worldwide' },
-        ],
-        layout: 'radio' // Shows as radio buttons instead of dropdown
-      },
-      initialValue: 'worldwide'
-    }),
-    defineField({
-      name: 'genre',
-      title: 'Genre',
-      type: 'string',
-      options: {
-        list: [
-          { title: 'Rock', value: 'Rock' },
-          { title: 'Pop', value: 'Pop' },
-          { title: 'Jazz', value: 'Jazz' },
-          { title: 'Funk & Soul', value: 'Funk & Soul' },
-          { title: 'Electronic', value: 'Electronic' },
-          { title: 'Hip Hop', value: 'Hip Hop' },
-          { title: 'Folk / Narodna', value: 'Folk' },
-          { title: 'Classical', value: 'Classical' },
-          { title: 'Reggae', value: 'Reggae' },
-        ],
-      },
     }),
   ],
 })
