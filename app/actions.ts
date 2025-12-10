@@ -1,21 +1,24 @@
 "use server";
 
 import { createClient } from "next-sanity";
+import { revalidatePath } from "next/cache";
 
 const writeClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   apiVersion: "2024-01-01",
-  token: process.env.SANITY_API_TOKEN,
+  token: process.env.SANITY_API_TOKEN, // Needs the Editor token from .env.local
   useCdn: false,
 });
 
 export async function createOrder(formData: any, cartItems: any[]) {
   try {
+    // Start a Transaction (This ensures all changes happen together)
     const transaction = writeClient.transaction();
 
-    // 1. Create Order
+    // 1. Create the Order Document
     const orderId = `order-${Date.now()}`;
+    
     transaction.create({
       _id: orderId,
       _type: "order",
@@ -33,7 +36,9 @@ export async function createOrder(formData: any, cartItems: any[]) {
       })),
     });
 
-    // 2. SMART STOCK DECREASE & SOLD OUT TIMESTAMP
+    // 2. SMART STOCK DECREASE
+    // We fetch the current stock levels first to know if we are hitting zero
+    // (This prevents race conditions where we might miss the "0" moment)
     const productIds = cartItems.map((item) => item.id);
     const currentProducts = await writeClient.fetch(
       `*[_id in $ids] { _id, stock }`, 
@@ -44,25 +49,30 @@ export async function createOrder(formData: any, cartItems: any[]) {
       const productInDb = currentProducts.find((p: any) => p._id === cartItem.id);
       
       if (productInDb) {
-        // --- FIXED SECTION START ---
-        // We use a callback (p) to define the patch operations
+        // Use callback syntax for patch to chain operations safely
         transaction.patch(cartItem.id.toString(), (p) => {
-            // 1. Always decrement stock
+            // A. Decrease stock
             let patch = p.dec({ stock: 1 });
 
-            // 2. If this purchase hits 0, also stamp the time
+            // B. If this specific purchase makes it 0, stamp it!
             if (productInDb.stock - 1 <= 0) {
                 patch = patch.set({ soldOutAt: new Date().toISOString() });
             }
-
-            // 3. Return the final patch instructions
+            
             return patch;
         });
-        // --- FIXED SECTION END ---
       }
     });
 
+    // 3. Commit (Run everything)
     await transaction.commit();
+
+    // 4. Force Cache Refresh (CRITICAL)
+    // This tells Next.js: "The data changed, stop showing the old version."
+    revalidatePath('/shop'); 
+    revalidatePath('/product/[slug]', 'page'); 
+    revalidatePath('/'); 
+
     return { success: true, orderId };
   } catch (error) {
     console.error("Sanity Write Error:", error);
