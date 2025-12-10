@@ -44,13 +44,21 @@ export async function createOrder(formData: any, cartItems: any[]) {
       const productInDb = currentProducts.find((p: any) => p._id === cartItem.id);
       
       if (productInDb) {
-        // Decrease stock
-        const patch = transaction.patch(cartItem.id.toString()).dec({ stock: 1 });
+        // --- FIXED SECTION START ---
+        // We use a callback (p) to define the patch operations
+        transaction.patch(cartItem.id.toString(), (p) => {
+            // 1. Always decrement stock
+            let patch = p.dec({ stock: 1 });
 
-        // If this specific purchase makes it 0, stamp it!
-        if (productInDb.stock - 1 <= 0) {
-            patch.set({ soldOutAt: new Date().toISOString() });
-        }
+            // 2. If this purchase hits 0, also stamp the time
+            if (productInDb.stock - 1 <= 0) {
+                patch = patch.set({ soldOutAt: new Date().toISOString() });
+            }
+
+            // 3. Return the final patch instructions
+            return patch;
+        });
+        // --- FIXED SECTION END ---
       }
     });
 
