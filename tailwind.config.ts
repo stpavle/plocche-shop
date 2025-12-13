@@ -9,16 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        paper: "#F4F4F0",
-        ink: "#1A1A1A",
-        grain: "#A3A3A3",
-        accent: "#FF4D00",
-        worn: "#E5E5E5",
+        paper: "#F4F4F0", // Soft Off-White Background
+        ink: "#1A1A1A",   // Soft Black Text
+        grain: "#A3A3A3", // Grey for grain effect
+        // UPDATED: Restoring a warm, gold accent color for nostalgia/pop
+        accent: "#D4AF37", 
+        worn: "#E5E5E5",  // Light grey for borders
       },
       fontFamily: {
-        sans: ['var(--font-inter)'],
-        mono: ['var(--font-mono)'],
+        // ... keep Montserrat and Mono as is
+        sans: ['var(--font-montserrat)', 'sans-serif'],
+        mono: ['var(--font-mono)', 'monospace'],
       },
+      animation: {
+        'spin-slow': 'spin 8s linear infinite',
+      }
     },
   },
   plugins: [],

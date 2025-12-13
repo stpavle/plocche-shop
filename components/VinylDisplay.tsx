@@ -6,14 +6,15 @@ interface VinylProps {
   price?: string;
   color?: string;
   imageUrl?: string; 
-  stock?: number; // <--- NEW PROP
+  stock?: number;
 }
 
 export default function VinylDisplay({ 
   title = "Unknown Artist", 
   artist = "Sarajevo Sessions", 
   price = "35 KM",
-  color = "#FF4D00",
+  // UPDATED: Default color is now Black (#1A1A1A) to match the new theme
+  color = "#1A1A1A", 
   imageUrl,
   stock = 1, // Default to 1 to be safe
 }: VinylProps) {
