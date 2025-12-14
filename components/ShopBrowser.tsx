@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Search, X, ArrowUpDown } from "lucide-react";
 import ProductGrid from "./ProductGrid";
+import { useLanguage } from "../context/LanguageContext"; // <--- Import
 
 interface Product {
   _id: string;
@@ -18,14 +19,14 @@ interface Product {
 }
 
 export default function ShopBrowser({ products }: { products: Product[] }) {
+  const { t } = useLanguage(); // <--- Hook
   const [query, setQuery] = useState("");
   const [selectedOrigin, setSelectedOrigin] = useState<string | null>(null);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<"newest" | "price_asc" | "price_desc">("newest"); // <--- SORT STATE
+  const [sortOrder, setSortOrder] = useState<"newest" | "price_asc" | "price_desc">("newest");
 
   const availableGenres = Array.from(new Set(products.map(p => p.genre).filter(Boolean)));
 
-  // --- FILTERING & SORTING LOGIC ---
   const filteredProducts = products
     .filter((product) => {
         const search = query.toLowerCase();
@@ -39,10 +40,9 @@ export default function ShopBrowser({ products }: { products: Product[] }) {
         return matchesSearch && matchesOrigin && matchesGenre;
     })
     .sort((a, b) => {
-        // Sort Logic
         if (sortOrder === "price_asc") return a.price - b.price;
         if (sortOrder === "price_desc") return b.price - a.price;
-        return 0; // Default (Newest) relies on Sanity's initial fetch order
+        return 0; 
     });
 
   return (
@@ -50,22 +50,20 @@ export default function ShopBrowser({ products }: { products: Product[] }) {
       {/* --- HEADER --- */}
       <div className="mb-12 pt-12 border-b border-ink/10 pb-8">
         
-        {/* Title & Count */}
         <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-8">
           <div>
             <h1 className="text-4xl md:text-6xl font-bold uppercase tracking-tighter">
-              All Records
+              {t.shop.title}
             </h1>
             <span className="font-mono text-sm text-ink/60 uppercase">
-              {filteredProducts.length} Items Found
+              {filteredProducts.length} {t.shop.itemsFound}
             </span>
           </div>
 
-          {/* Search Bar */}
           <div className="relative w-full md:w-80 group">
             <input
               type="text"
-              placeholder="SEARCH..."
+              placeholder={t.shop.searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full bg-paper/50 border border-ink/20 py-3 pl-4 pr-10 font-mono text-sm uppercase focus:outline-none focus:border-accent transition-all placeholder:text-ink/30"
@@ -81,16 +79,16 @@ export default function ShopBrowser({ products }: { products: Product[] }) {
           
           {/* Origin */}
           <div className="flex gap-4 items-center">
-            <span className="text-ink/40">Region:</span>
-            <button onClick={() => setSelectedOrigin(null)} className={`${!selectedOrigin ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>All</button>
-            <button onClick={() => setSelectedOrigin("balkan")} className={`${selectedOrigin === "balkan" ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>Balkan</button>
-            <button onClick={() => setSelectedOrigin("worldwide")} className={`${selectedOrigin === "worldwide" ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>Worldwide</button>
+            <span className="text-ink/40">{t.shop.region}</span>
+            <button onClick={() => setSelectedOrigin(null)} className={`${!selectedOrigin ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>{t.shop.all}</button>
+            <button onClick={() => setSelectedOrigin("balkan")} className={`${selectedOrigin === "balkan" ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>{t.shop.balkan}</button>
+            <button onClick={() => setSelectedOrigin("worldwide")} className={`${selectedOrigin === "worldwide" ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>{t.shop.worldwide}</button>
           </div>
 
           {/* Genre */}
           <div className="flex gap-4 items-center flex-wrap">
-            <span className="text-ink/40">Genre:</span>
-            <button onClick={() => setSelectedGenre(null)} className={`${!selectedGenre ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>All</button>
+            <span className="text-ink/40">{t.shop.genre}</span>
+            <button onClick={() => setSelectedGenre(null)} className={`${!selectedGenre ? "text-accent border-b border-accent" : "text-ink/60 hover:text-ink"}`}>{t.shop.all}</button>
             {availableGenres.map(genre => (
                 <button 
                     key={genre}
@@ -102,7 +100,7 @@ export default function ShopBrowser({ products }: { products: Product[] }) {
             ))}
           </div>
             
-          {/* SORTING (Right Aligned) */}
+          {/* SORTING */}
           <div className="flex items-center gap-2 md:ml-auto border-l border-ink/10 pl-8 md:pl-0 md:border-none">
              <ArrowUpDown size={14} className="text-ink/40"/>
              <select 
@@ -110,9 +108,9 @@ export default function ShopBrowser({ products }: { products: Product[] }) {
                 onChange={(e) => setSortOrder(e.target.value as any)}
                 className="bg-transparent border-none outline-none cursor-pointer text-ink hover:text-accent uppercase font-mono text-xs tracking-widest"
              >
-                <option value="newest">Newest First</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
+                <option value="newest">{t.shop.sort.newest}</option>
+                <option value="price_asc">{t.shop.sort.priceLow}</option>
+                <option value="price_desc">{t.shop.sort.priceHigh}</option>
              </select>
           </div>
 
@@ -122,7 +120,7 @@ export default function ShopBrowser({ products }: { products: Product[] }) {
                 onClick={() => { setSelectedOrigin(null); setSelectedGenre(null); setQuery(""); }}
                 className="text-red-500 flex items-center gap-1 hover:opacity-70"
             >
-                <X size={14} /> Clear
+                <X size={14} /> {t.shop.clear}
             </button>
           )}
 
@@ -134,9 +132,9 @@ export default function ShopBrowser({ products }: { products: Product[] }) {
         <ProductGrid products={filteredProducts} />
       ) : (
         <div className="py-32 text-center font-mono text-ink/40 uppercase">
-          <p className="text-xl mb-2">No records found</p>
+          <p className="text-xl mb-2">{t.shop.noRecords}</p>
           <button onClick={() => { setSelectedOrigin(null); setSelectedGenre(null); setQuery(""); }} className="text-accent underline">
-            Clear Filters
+            {t.shop.clearFilters}
           </button>
         </div>
       )}

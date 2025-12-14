@@ -1,57 +1,77 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import { toast } from "sonner"; // <--- Import Sonner
+import React, { createContext, useContext, useState, useEffect } from "react";
 
-type CartItem = {
-  id: string; // Changed to string to match Sanity IDs
+// 1. Define the shape of a Cart Item
+export type CartItem = {
+  id: string;
   title: string;
   price: string;
-  artist: string;
+  image: string;
+  quantity?: number; // Optional, defaults to 1
 };
 
+// 2. Define the shape of the Context (What functions/data are available?)
 interface CartContextType {
   items: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (id: string) => void;
-  isCartOpen: boolean;
-  toggleCart: () => void;
+  addItem: (item: CartItem) => void;     // <--- THIS WAS MISSING
+  removeItem: (id: string) => void;
+  clearCart: () => void;
 }
 
+// 3. Create the Context
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: ReactNode }) {
+// 4. Create the Provider
+export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const addToCart = (item: CartItem) => {
-    // Optional: Prevent duplicates if unique item
-    const exists = items.find(i => i.id === item.id);
-    if (exists) {
-        toast.error("Item already in cart");
-        return;
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem("cart");
+    if (savedCart) {
+      setItems(JSON.parse(savedCart));
     }
+  }, []);
 
-    setItems((prev) => [...prev, item]);
-    setIsCartOpen(true); 
-    toast.success(`${item.title} added to crate.`); // <--- Toast Trigger
+  // Save cart to localStorage whenever items change
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(items));
+  }, [items]);
+
+  // --- ACTIONS ---
+
+  const addItem = (newItem: CartItem) => {
+    setItems((prevItems) => {
+      const existingItem = prevItems.find((item) => item.id === newItem.id);
+      if (existingItem) {
+        // If item exists, usually we'd increase quantity, but for now let's just keep it simple
+        return prevItems; 
+      }
+      return [...prevItems, newItem];
+    });
   };
 
-  const removeFromCart = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+  const removeItem = (id: string) => {
+    setItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
-  const toggleCart = () => setIsCartOpen((prev) => !prev);
+  const clearCart = () => {
+    setItems([]);
+  };
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, isCartOpen, toggleCart }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, clearCart }}>
       {children}
     </CartContext.Provider>
   );
 }
 
+// 5. Create the Hook
 export function useCart() {
   const context = useContext(CartContext);
-  if (!context) throw new Error("useCart must be used within a CartProvider");
+  if (context === undefined) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
   return context;
 }

@@ -3,8 +3,6 @@
 import { createClient } from "next-sanity";
 import { revalidatePath } from "next/cache";
 
-// NOTE: We will add the Resend imports and logic here later
-
 const writeClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
@@ -13,12 +11,10 @@ const writeClient = createClient({
   useCdn: false,
 });
 
-// The formData now includes deliveryMethod from the client
 export async function createOrder(formData: any, cartItems: any[]) {
   try {
     const transaction = writeClient.transaction();
 
-    // 1. Create Order
     const orderNum = `ORD-${Date.now()}`;
     transaction.create({
       _id: `order-${Date.now()}`,
@@ -28,8 +24,8 @@ export async function createOrder(formData: any, cartItems: any[]) {
       email: formData.email, 
       phone: formData.phone,
       address: `${formData.address}, ${formData.postalCode} ${formData.city}`,
-      // NEW: Save the delivery method
-      deliveryMethod: formData.deliveryMethod, 
+      // NEW: Save Delivery Method
+      deliveryMethod: formData.deliveryMethod,
       status: "pending",
       items: cartItems.map((item) => ({
         _key: Math.random().toString(36).substring(7),
@@ -39,7 +35,6 @@ export async function createOrder(formData: any, cartItems: any[]) {
       })),
     });
 
-    // 2. Reduce Stock (Existing Logic)
     const productIds = cartItems.map((item) => item.id);
     const currentProducts = await writeClient.fetch(`*[_id in $ids] { _id, stock }`, { ids: productIds });
 
@@ -57,8 +52,6 @@ export async function createOrder(formData: any, cartItems: any[]) {
     });
 
     await transaction.commit();
-
-    // NOTE: EMAIL LOGIC WILL GO HERE LATER
 
     revalidatePath('/shop'); 
     revalidatePath('/product/[slug]', 'page'); 

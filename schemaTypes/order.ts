@@ -5,18 +5,9 @@ export default defineType({
   title: 'Orders',
   type: 'document',
   fields: [
-    defineField({
-      name: 'orderNumber',
-      title: 'Order Number',
-      type: 'string',
-    }),
-    defineField({
-      name: 'customerName',
-      title: 'Customer Name',
-      type: 'string',
-    }),
-    // ------------------------
-    // NEW FIELD: Delivery Method
+    defineField({ name: 'orderNumber', title: 'Order Number', type: 'string' }),
+    defineField({ name: 'customerName', title: 'Customer Name', type: 'string' }),
+    // NEW FIELD
     defineField({
       name: 'deliveryMethod',
       title: 'Delivery Method',
@@ -29,23 +20,9 @@ export default defineType({
       },
       initialValue: 'shipping'
     }),
-    // ------------------------
-    defineField({
-      name: 'phone',
-      title: 'Phone Number',
-      type: 'string',
-    }),
-    defineField({
-      name: 'email', 
-      title: 'Email',
-      type: 'string',
-    }),
-    
-    defineField({
-      name: 'address',
-      title: 'Shipping Address',
-      type: 'text',
-    }),
+    defineField({ name: 'phone', title: 'Phone Number', type: 'string' }),
+    defineField({ name: 'email', title: 'Email', type: 'string' }),
+    defineField({ name: 'address', title: 'Shipping Address', type: 'text' }),
     defineField({
       name: 'items',
       title: 'Purchased Items',
@@ -55,7 +32,7 @@ export default defineType({
           type: 'object',
           fields: [
             { name: 'title', type: 'string' },
-            { name: 'price', type: 'string' }, // We keep the snapshot price at time of purchase
+            { name: 'price', type: 'string' },
             { name: 'productId', type: 'string' },
           ]
         }
@@ -76,7 +53,6 @@ export default defineType({
       initialValue: 'pending'
     }),
   ],
-  // PREVIEW CONFIGURATION: Shows status and method on list view
   preview: {
     select: {
       title: 'orderNumber',

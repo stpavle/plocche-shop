@@ -13,7 +13,6 @@ export default function CheckoutPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  // State for delivery method (default to shipping)
   const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping');
 
   const total = items.reduce((acc, item) => {
@@ -26,12 +25,9 @@ export default function CheckoutPage() {
     setLoading(true);
     
     const formData = new FormData(e.currentTarget);
-    
-    // Construct data based on delivery method
     const data = {
       firstName: formData.get("firstName"),
       lastName: formData.get("lastName"),
-      // If pickup, use hardcoded info for Sanity record
       address: deliveryMethod === 'pickup' 
         ? "STORE PICKUP (Banja Luka)" 
         : formData.get("address"),
@@ -43,12 +39,11 @@ export default function CheckoutPage() {
         : formData.get("postalCode"),
       phone: formData.get("phone"),
       email: formData.get("email"),
-      deliveryMethod: deliveryMethod, // Passed to server action
+      deliveryMethod: deliveryMethod, 
     };
 
     const result = await createOrder(data, cartItems);
     setLoading(false);
-
     if (result.success) setIsSuccess(true);
     else alert("Error processing order");
   };
@@ -60,7 +55,7 @@ export default function CheckoutPage() {
         <h1 className="text-4xl font-bold uppercase mb-4">{t.checkout.successTitle}</h1>
         <p className="font-mono text-ink/60 mb-8 max-w-md">
             {deliveryMethod === 'pickup' 
-                ? "Your order is confirmed and ready for pickup at our Banja Luka location!" 
+                ? t.checkout.successMsgPickup 
                 : t.checkout.successMsg}
         </p>
         <Link href="/" className="bg-ink text-paper px-8 py-3 uppercase font-mono text-sm hover:bg-accent hover:text-ink transition-colors">
@@ -84,7 +79,7 @@ export default function CheckoutPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <div>
           <h3 className="font-mono text-xs uppercase tracking-widest border-b border-ink/10 pb-4 mb-6">
-            Details
+            {t.checkout.shippingDetails}
           </h3>
           
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -97,7 +92,7 @@ export default function CheckoutPage() {
                     className={`flex flex-col items-center justify-center gap-3 p-6 border transition-all ${deliveryMethod === 'shipping' ? 'border-accent bg-accent/5' : 'border-ink/20 hover:border-ink/40'}`}
                 >
                     <Truck size={24} className={deliveryMethod === 'shipping' ? 'text-accent' : 'text-ink/60'} />
-                    <span className="font-mono text-xs uppercase font-bold">Shipping</span>
+                    <span className="font-mono text-xs uppercase font-bold">{t.checkout.shippingMethod}</span>
                 </button>
                 <button
                     type="button"
@@ -105,12 +100,11 @@ export default function CheckoutPage() {
                     className={`flex flex-col items-center justify-center gap-3 p-6 border transition-all ${deliveryMethod === 'pickup' ? 'border-accent bg-accent/5' : 'border-ink/20 hover:border-ink/40'}`}
                 >
                     <Store size={24} className={deliveryMethod === 'pickup' ? 'text-accent' : 'text-ink/60'} />
-                    <span className="font-mono text-xs uppercase font-bold">Local Pickup</span>
-                    <span className="text-[10px] text-ink/40 uppercase">Banja Luka</span>
+                    <span className="font-mono text-xs uppercase font-bold">{t.checkout.pickupMethod}</span>
+                    <span className="text-[10px] text-ink/40 uppercase">{t.checkout.pickupLocation}</span>
                 </button>
             </div>
 
-            {/* BASIC INFO (Always Shown) */}
             <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <label className="text-xs font-bold uppercase">{t.checkout.firstName}</label>
@@ -132,7 +126,6 @@ export default function CheckoutPage() {
                 <input name="phone" required type="tel" className="w-full bg-transparent border border-ink/20 p-3 outline-none focus:border-accent transition-colors" />
             </div>
 
-            {/* ADDRESS FIELDS (Only if Shipping) */}
             {deliveryMethod === 'shipping' && (
                 <div className="animate-in fade-in slide-in-from-top-4 space-y-6 pt-4 border-t border-ink/10 border-dashed">
                     <div className="space-y-2">
@@ -143,8 +136,7 @@ export default function CheckoutPage() {
                     <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase">{t.checkout.city}</label>
-                            {/* CHANGED: Select -> Input */}
-                            <input name="city" required type="text" placeholder="Sarajevo, Mostar, Tuzla..." className="w-full bg-transparent border border-ink/20 p-3 outline-none focus:border-accent transition-colors" />
+                            <input name="city" required type="text" className="w-full bg-transparent border border-ink/20 p-3 outline-none focus:border-accent transition-colors" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase">{t.checkout.postal}</label>
@@ -156,13 +148,12 @@ export default function CheckoutPage() {
 
             <button type="submit" disabled={loading} className="mt-6 w-full bg-ink text-paper py-4 font-mono text-sm uppercase tracking-widest hover:bg-accent hover:text-ink transition-colors flex justify-center">
                 {loading ? <Loader2 className="animate-spin" /> : (
-                    deliveryMethod === 'pickup' ? `Confirm Pickup — ${total} KM` : t.checkout.confirm
+                    deliveryMethod === 'pickup' ? `${t.checkout.confirmPickup} — ${total} KM` : t.checkout.confirm
                 )}
             </button>
           </form>
         </div>
 
-        {/* ORDER SUMMARY (Right Side) */}
         <div className="bg-worn/30 p-8 h-fit border border-ink/10">
           <h3 className="font-mono text-xs uppercase tracking-widest border-b border-ink/10 pb-4 mb-6">
             {t.checkout.orderSummary}
@@ -182,7 +173,7 @@ export default function CheckoutPage() {
             </div>
             <p className="mt-4 text-xs font-mono text-ink/60">
                 {deliveryMethod === 'pickup' 
-                    ? "Store Pickup: Free of charge. We will contact you to arrange pickup time." 
+                    ? t.checkout.pickupNote
                     : t.checkout.note}
             </p>
           </div>

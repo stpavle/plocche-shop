@@ -3,15 +3,15 @@ import VinylDisplay from "../components/VinylDisplay";
 import { client } from "../lib/sanity"; 
 import HomeHeroText from "../components/HomeHeroText";
 import HomeFooter from "../components/HomeFooter";
-import RecordCarousel from "../components/RecordMarquee"; // <--- IMPORT USING THE FILENAME
+import RecordMarquee from "../components/RecordMarquee";
 import VantaBackground from "../components/VantaBackground"; 
 
 async function getData() {
   const featuredQuery = `*[_type == "product"] | order(isFeatured desc, _createdAt desc)[0] {
-    title, artist, price, "imageUrl": image.asset->url, labelColor, slug, _id
+    title, artist, price, "imageUrl": image.asset->url, labelColor, slug, _id, stock
   }`;
 
-  // Query 2: Marquee List - FILTERED to only include items where stock > 0
+  // CORRECTED: Strictly filter for stock > 0.
   const listQuery = `*[_type == "product" && stock > 0] | order(_createdAt desc)[0...10] {
     title, artist, price, "imageUrl": image.asset->url, labelColor, slug, _id, stock
   }`;
@@ -33,17 +33,13 @@ export default async function Home() {
     title: "Unknown Artist",
     artist: "Sarajevo Sessions",
     price: "35 KM",
-    labelColor: "#D4AF37", // Using new accent default
+    labelColor: "#FF4D00",
     imageUrl: null
   };
 
   return (
     <div className="min-h-screen flex flex-col">
-      
-      {/* --- HERO CONTAINER --- */}
       <div className="relative w-full overflow-hidden mb-24">
-          
-          {/* 1. The Background */}
           <div className="absolute inset-0 z-0 pointer-events-none opacity-60 mix-blend-multiply">
              <div className="relative w-full h-[200%] top-0">
                 <div className="w-full h-full scale-[2.3] origin-center">
@@ -52,15 +48,8 @@ export default async function Home() {
              </div>
           </div>
 
-          {/* 2. The Content Grid */}
           <section className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 pb-12 items-center px-6 max-w-screen-2xl mx-auto">
-            
-            {/* Left Column (Text) */}
-            <div>
-                <HomeHeroText />
-            </div>
-
-            {/* Right Column (Record) */}
+            <div><HomeHeroText /></div>
             <div className="flex items-center justify-center min-h-[400px] md:min-h-[500px]">
                 {featured?.slug ? (
                   <Link href={`/product/${featured.slug.current}`}>
@@ -86,12 +75,10 @@ export default async function Home() {
           </section>
       </div>
 
-      {/* Marquee (Now a Carousel) */}
       <div className="relative z-10">
-        <RecordCarousel items={marqueeItems} />
+        <RecordMarquee items={marqueeItems} />
       </div>
 
-      {/* Footer */}
       <div className="px-6 relative z-10">
         <HomeFooter />
       </div>
