@@ -8,25 +8,29 @@ export type CartItem = {
   title: string;
   price: string;
   image: string;
-  quantity?: number; // Optional, defaults to 1
+  quantity?: number; 
 };
 
-// 2. Define the shape of the Context (What functions/data are available?)
+// 2. Define the shape of the Context
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: CartItem) => void;     // <--- THIS WAS MISSING
+  addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
+  // MISSING PROPS RESTORED BELOW:
+  isCartOpen: boolean;
+  toggleCart: () => void;
 }
 
-// 3. Create the Context
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// 4. Create the Provider
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  
+  // RESTORED: State for the drawer
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage
   useEffect(() => {
     const savedCart = localStorage.getItem("cart");
     if (savedCart) {
@@ -34,7 +38,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever items change
+  // Save cart to localStorage
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(items));
   }, [items]);
@@ -45,9 +49,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === newItem.id);
       if (existingItem) {
-        // If item exists, usually we'd increase quantity, but for now let's just keep it simple
         return prevItems; 
       }
+      // Open cart automatically when adding an item
+      setIsCartOpen(true); 
       return [...prevItems, newItem];
     });
   };
@@ -60,14 +65,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([]);
   };
 
+  // RESTORED: Toggle function
+  const toggleCart = () => {
+    setIsCartOpen((prev) => !prev);
+  };
+
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, clearCart }}>
+    <CartContext.Provider 
+      value={{ 
+        items, 
+        addItem, 
+        removeItem, 
+        clearCart, 
+        isCartOpen, // <--- Passing state
+        toggleCart  // <--- Passing function
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
 }
 
-// 5. Create the Hook
 export function useCart() {
   const context = useContext(CartContext);
   if (context === undefined) {
