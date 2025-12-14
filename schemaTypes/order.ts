@@ -15,12 +15,26 @@ export default defineType({
       title: 'Customer Name',
       type: 'string',
     }),
+    // ------------------------
+    // NEW FIELD: Delivery Method
+    defineField({
+      name: 'deliveryMethod',
+      title: 'Delivery Method',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Shipping', value: 'shipping' },
+          { title: 'Local Pickup', value: 'pickup' },
+        ]
+      },
+      initialValue: 'shipping'
+    }),
+    // ------------------------
     defineField({
       name: 'phone',
       title: 'Phone Number',
       type: 'string',
     }),
-    // ------------------------
     defineField({
       name: 'email', 
       title: 'Email',
@@ -62,4 +76,30 @@ export default defineType({
       initialValue: 'pending'
     }),
   ],
+  // PREVIEW CONFIGURATION: Shows status and method on list view
+  preview: {
+    select: {
+      title: 'orderNumber',
+      subtitle: 'customerName',
+      status: 'status',
+      method: 'deliveryMethod'
+    },
+    prepare(selection) {
+      const { title, subtitle, status, method } = selection
+      
+      const statusIcons: Record<string, string> = {
+        pending: '⏳',
+        shipped: '🚚',
+        delivered: '✅',
+        cancelled: '❌'
+      }
+
+      const methodIcon = method === 'pickup' ? '🏪' : '📦';
+
+      return {
+        title: `${statusIcons[status] || '❓'} ${title}`,
+        subtitle: `${methodIcon} ${subtitle} | ${status?.toUpperCase()}`
+      }
+    }
+  }
 })

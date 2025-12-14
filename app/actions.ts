@@ -3,30 +3,33 @@
 import { createClient } from "next-sanity";
 import { revalidatePath } from "next/cache";
 
+// NOTE: We will add the Resend imports and logic here later
+
 const writeClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   apiVersion: "2024-01-01",
-  token: process.env.SANITY_API_TOKEN, // Needs the Editor token from .env.local
+  token: process.env.SANITY_API_TOKEN,
   useCdn: false,
 });
 
+// The formData now includes deliveryMethod from the client
 export async function createOrder(formData: any, cartItems: any[]) {
   try {
-    // Start a Transaction (This ensures all changes happen together)
     const transaction = writeClient.transaction();
 
-    // 1. Create the Order Document
-    const orderId = `order-${Date.now()}`;
-    
+    // 1. Create Order
+    const orderNum = `ORD-${Date.now()}`;
     transaction.create({
-      _id: orderId,
+      _id: `order-${Date.now()}`,
       _type: "order",
-      orderNumber: `ORD-${Date.now()}`,
+      orderNumber: orderNum,
       customerName: `${formData.firstName} ${formData.lastName}`,
       email: formData.email, 
-      address: `${formData.address}, ${formData.postalCode} ${formData.city}`,
       phone: formData.phone,
+      address: `${formData.address}, ${formData.postalCode} ${formData.city}`,
+      // NEW: Save the delivery method
+      deliveryMethod: formData.deliveryMethod, 
       status: "pending",
       items: cartItems.map((item) => ({
         _key: Math.random().toString(36).substring(7),
@@ -36,46 +39,34 @@ export async function createOrder(formData: any, cartItems: any[]) {
       })),
     });
 
-    // 2. SMART STOCK DECREASE
-    // We fetch the current stock levels first to know if we are hitting zero
-    // (This prevents race conditions where we might miss the "0" moment)
+    // 2. Reduce Stock (Existing Logic)
     const productIds = cartItems.map((item) => item.id);
-    const currentProducts = await writeClient.fetch(
-      `*[_id in $ids] { _id, stock }`, 
-      { ids: productIds }
-    );
+    const currentProducts = await writeClient.fetch(`*[_id in $ids] { _id, stock }`, { ids: productIds });
 
     cartItems.forEach((cartItem) => {
       const productInDb = currentProducts.find((p: any) => p._id === cartItem.id);
-      
       if (productInDb) {
-        // Use callback syntax for patch to chain operations safely
         transaction.patch(cartItem.id.toString(), (p) => {
-            // A. Decrease stock
             let patch = p.dec({ stock: 1 });
-
-            // B. If this specific purchase makes it 0, stamp it!
             if (productInDb.stock - 1 <= 0) {
                 patch = patch.set({ soldOutAt: new Date().toISOString() });
             }
-            
             return patch;
         });
       }
     });
 
-    // 3. Commit (Run everything)
     await transaction.commit();
 
-    // 4. Force Cache Refresh (CRITICAL)
-    // This tells Next.js: "The data changed, stop showing the old version."
+    // NOTE: EMAIL LOGIC WILL GO HERE LATER
+
     revalidatePath('/shop'); 
     revalidatePath('/product/[slug]', 'page'); 
     revalidatePath('/'); 
 
-    return { success: true, orderId };
+    return { success: true, orderId: orderNum };
   } catch (error) {
-    console.error("Sanity Write Error:", error);
+    console.error("Error:", error);
     return { success: false, error: "Failed to create order" };
   }
 }

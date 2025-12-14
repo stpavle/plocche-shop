@@ -3,7 +3,7 @@ import VinylDisplay from "../components/VinylDisplay";
 import { client } from "../lib/sanity"; 
 import HomeHeroText from "../components/HomeHeroText";
 import HomeFooter from "../components/HomeFooter";
-import RecordMarquee from "../components/RecordMarquee";
+import RecordCarousel from "../components/RecordMarquee"; // <--- IMPORT USING THE FILENAME
 import VantaBackground from "../components/VantaBackground"; 
 
 async function getData() {
@@ -11,8 +11,9 @@ async function getData() {
     title, artist, price, "imageUrl": image.asset->url, labelColor, slug, _id
   }`;
 
-  const listQuery = `*[_type == "product"] | order(_createdAt desc)[0...10] {
-    title, artist, price, "imageUrl": image.asset->url, labelColor, slug, _id
+  // Query 2: Marquee List - FILTERED to only include items where stock > 0
+  const listQuery = `*[_type == "product" && stock > 0] | order(_createdAt desc)[0...10] {
+    title, artist, price, "imageUrl": image.asset->url, labelColor, slug, _id, stock
   }`;
   
   const [featured, list] = await Promise.all([
@@ -32,7 +33,7 @@ export default async function Home() {
     title: "Unknown Artist",
     artist: "Sarajevo Sessions",
     price: "35 KM",
-    labelColor: "#FF4D00",
+    labelColor: "#D4AF37", // Using new accent default
     imageUrl: null
   };
 
@@ -45,7 +46,6 @@ export default async function Home() {
           {/* 1. The Background */}
           <div className="absolute inset-0 z-0 pointer-events-none opacity-60 mix-blend-multiply">
              <div className="relative w-full h-[200%] top-0">
-                {/* UPDATED SCALE: Changed from 1.8 to 3.5 */}
                 <div className="w-full h-full scale-[2.3] origin-center">
                     <VantaBackground />
                 </div>
@@ -70,6 +70,7 @@ export default async function Home() {
                         price={typeof displayData.price === 'number' ? `${displayData.price} KM` : displayData.price}
                         color={displayData.labelColor}
                         imageUrl={displayData.imageUrl}
+                        stock={featured.stock} 
                      />
                   </Link>
                 ) : (
@@ -85,9 +86,9 @@ export default async function Home() {
           </section>
       </div>
 
-      {/* Marquee */}
+      {/* Marquee (Now a Carousel) */}
       <div className="relative z-10">
-        <RecordMarquee items={marqueeItems} />
+        <RecordCarousel items={marqueeItems} />
       </div>
 
       {/* Footer */}
