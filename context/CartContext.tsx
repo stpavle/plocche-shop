@@ -15,11 +15,10 @@ export type CartItem = {
 interface CartContextType {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  removeItem: (id: string) => void;
+  removeFromCart: (id: string) => void; // <--- RENAMED to match CartDrawer
   clearCart: () => void;
-  // MISSING PROPS RESTORED BELOW:
-  isCartOpen: boolean;
-  toggleCart: () => void;
+  isCartOpen: boolean; // <--- RESTORED
+  toggleCart: () => void; // <--- RESTORED
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -57,7 +56,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const removeItem = (id: string) => {
+  // RENAMED FUNCTION to match interface
+  const removeFromCart = (id: string) => {
     setItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
@@ -65,7 +65,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([]);
   };
 
-  // RESTORED: Toggle function
+  // RESTORED FUNCTION
   const toggleCart = () => {
     setIsCartOpen((prev) => !prev);
   };
@@ -75,10 +75,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       value={{ 
         items, 
         addItem, 
-        removeItem, 
+        removeFromCart, // <--- EXPORTED AS removeFromCart
         clearCart, 
-        isCartOpen, // <--- Passing state
-        toggleCart  // <--- Passing function
+        isCartOpen, 
+        toggleCart 
       }}
     >
       {children}
