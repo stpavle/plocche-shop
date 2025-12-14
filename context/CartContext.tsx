@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 export type CartItem = {
   id: string;
   title: string;
+  artist: string; // <--- ADDED THIS
   price: string;
   image: string;
   quantity?: number; 
@@ -15,21 +16,18 @@ export type CartItem = {
 interface CartContextType {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  removeFromCart: (id: string) => void; // <--- RENAMED to match CartDrawer
+  removeFromCart: (id: string) => void;
   clearCart: () => void;
-  isCartOpen: boolean; // <--- RESTORED
-  toggleCart: () => void; // <--- RESTORED
+  isCartOpen: boolean;
+  toggleCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  
-  // RESTORED: State for the drawer
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Load cart from localStorage
   useEffect(() => {
     const savedCart = localStorage.getItem("cart");
     if (savedCart) {
@@ -37,12 +35,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save cart to localStorage
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(items));
   }, [items]);
-
-  // --- ACTIONS ---
 
   const addItem = (newItem: CartItem) => {
     setItems((prevItems) => {
@@ -50,13 +45,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existingItem) {
         return prevItems; 
       }
-      // Open cart automatically when adding an item
       setIsCartOpen(true); 
       return [...prevItems, newItem];
     });
   };
 
-  // RENAMED FUNCTION to match interface
   const removeFromCart = (id: string) => {
     setItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
@@ -65,7 +58,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([]);
   };
 
-  // RESTORED FUNCTION
   const toggleCart = () => {
     setIsCartOpen((prev) => !prev);
   };
@@ -75,7 +67,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       value={{ 
         items, 
         addItem, 
-        removeFromCart, // <--- EXPORTED AS removeFromCart
+        removeFromCart, 
         clearCart, 
         isCartOpen, 
         toggleCart 

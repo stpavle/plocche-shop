@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useCart } from "../context/CartContext";
-import { useLanguage } from "../context/LanguageContext"; // <--- Import Language Hook
+import { useLanguage } from "../context/LanguageContext"; 
 import { toast } from "sonner";
 import VinylDisplay from "./VinylDisplay"; 
 
@@ -20,14 +19,15 @@ interface Product {
 
 export default function ProductGrid({ products }: { products: Product[] }) {
   const { addItem } = useCart();
-  const { t } = useLanguage(); // <--- Get Translation Dictionary
+  const { t } = useLanguage();
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
-    e.preventDefault(); // Prevent navigating to product page
+    e.preventDefault(); 
     
     addItem({
       id: product._id,
       title: product.title,
+      artist: product.artist, // <--- NOW PASSING ARTIST HERE TOO
       price: `${product.price} KM`,
       image: product.imageUrl,
     });
@@ -56,7 +56,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                   onClick={(e) => handleAddToCart(e, product)}
                   className="text-xs font-mono uppercase tracking-widest border-b border-accent text-accent hover:text-ink hover:border-ink transition-colors pb-1"
                 >
-                  {t.shop.addToCart} {/* <--- TRANSLATED STRING */}
+                  {t.shop.addToCart}
                 </button>
              ) : (
                 <span className="text-xs font-mono uppercase tracking-widest text-ink/40 border-b border-transparent pb-1 cursor-not-allowed">
