@@ -12,40 +12,93 @@ export default function CheckoutPage() {
   const { t } = useLanguage();
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+  const [error, setError] = useState<string | null>(null);
+
   const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping');
 
   const total = items.reduce((acc, item) => {
-    const priceNumber = parseInt(item.price.replace(/\D/g, '')); 
-    return acc + priceNumber;
+    try {
+      const priceNumber = parseInt(item.price.replace(/\D/g, ''), 10);
+      // Validate that parsing succeeded
+      if (isNaN(priceNumber)) {
+        console.error(`Invalid price format for item: ${item.title}`);
+        return acc;
+      }
+      return acc + priceNumber;
+    } catch (error) {
+      console.error(`Error parsing price for item: ${item.title}`, error);
+      return acc;
+    }
   }, 0);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    
-    const formData = new FormData(e.currentTarget);
-    const data = {
-      firstName: formData.get("firstName"),
-      lastName: formData.get("lastName"),
-      address: deliveryMethod === 'pickup' 
-        ? "STORE PICKUP (Banja Luka)" 
-        : formData.get("address"),
-      city: deliveryMethod === 'pickup' 
-        ? "Banja Luka" 
-        : formData.get("city"),
-      postalCode: deliveryMethod === 'pickup' 
-        ? "78000" 
-        : formData.get("postalCode"),
-      phone: formData.get("phone"),
-      email: formData.get("email"),
-      deliveryMethod: deliveryMethod, 
-    };
+    setError(null);
 
-    const result = await createOrder(data, cartItems);
-    setLoading(false);
-    if (result.success) setIsSuccess(true);
-    else alert("Error processing order");
+    try {
+      const formData = new FormData(e.currentTarget);
+
+      // Extract and validate form data
+      const firstName = formData.get("firstName");
+      const lastName = formData.get("lastName");
+      const email = formData.get("email");
+      const phone = formData.get("phone");
+
+      // Basic validation
+      if (!firstName || !lastName || !email || !phone) {
+        setError("Please fill in all required fields");
+        setLoading(false);
+        return;
+      }
+
+      // Email format validation
+      const emailStr = email.toString();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailStr)) {
+        setError("Please enter a valid email address");
+        setLoading(false);
+        return;
+      }
+
+      // Phone validation - basic check for at least some digits
+      const phoneStr = phone.toString();
+      if (phoneStr.replace(/\D/g, '').length < 6) {
+        setError("Please enter a valid phone number");
+        setLoading(false);
+        return;
+      }
+
+      const data = {
+        firstName,
+        lastName,
+        address: deliveryMethod === 'pickup'
+          ? "STORE PICKUP (Banja Luka)"
+          : formData.get("address"),
+        city: deliveryMethod === 'pickup'
+          ? "Banja Luka"
+          : formData.get("city"),
+        postalCode: deliveryMethod === 'pickup'
+          ? "78000"
+          : formData.get("postalCode"),
+        phone,
+        email,
+        deliveryMethod: deliveryMethod,
+      };
+
+      const result = await createOrder(data, cartItems);
+      setLoading(false);
+
+      if (result.success) {
+        setIsSuccess(true);
+      } else {
+        setError(result.error || "Error processing order. Please try again.");
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      setError("An unexpected error occurred. Please try again.");
+      setLoading(false);
+    }
   };
 
   if (isSuccess) {
@@ -83,7 +136,14 @@ export default function CheckoutPage() {
           </h3>
           
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            
+
+            {/* ERROR MESSAGE */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 p-4 text-sm font-mono">
+                {error}
+              </div>
+            )}
+
             {/* DELIVERY METHOD TOGGLE */}
             <div className="grid grid-cols-2 gap-4 mb-2">
                 <button

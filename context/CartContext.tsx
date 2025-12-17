@@ -29,14 +29,36 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      setItems(JSON.parse(savedCart));
+    try {
+      const savedCart = localStorage.getItem("cart");
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        // Validate that the parsed data is an array
+        if (Array.isArray(parsedCart)) {
+          setItems(parsedCart);
+        } else {
+          console.error("Invalid cart data in localStorage, resetting cart");
+          localStorage.removeItem("cart");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load cart from localStorage:", error);
+      // Clear corrupted data and start fresh
+      localStorage.removeItem("cart");
+      setItems([]);
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(items));
+    try {
+      localStorage.setItem("cart", JSON.stringify(items));
+    } catch (error) {
+      console.error("Failed to save cart to localStorage:", error);
+      // Notify user if storage quota is exceeded or other errors occur
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        console.error("Storage quota exceeded. Cart may not be saved.");
+      }
+    }
   }, [items]);
 
   const addItem = (newItem: CartItem) => {

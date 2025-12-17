@@ -12,13 +12,28 @@ export default function CartDrawer() {
   const router = useRouter();
 
   const total = items.reduce((acc, item) => {
-    const priceNumber = parseInt(item.price.replace(/\D/g, '')); 
-    return acc + priceNumber;
+    try {
+      const priceNumber = parseInt(item.price.replace(/\D/g, ''), 10);
+      // Validate that parsing succeeded
+      if (isNaN(priceNumber)) {
+        console.error(`Invalid price format for item: ${item.title}`);
+        return acc;
+      }
+      return acc + priceNumber;
+    } catch (error) {
+      console.error(`Error parsing price for item: ${item.title}`, error);
+      return acc;
+    }
   }, 0);
 
   const handleCheckout = () => {
-    toggleCart(); 
-    router.push("/checkout"); 
+    try {
+      toggleCart();
+      router.push("/checkout");
+    } catch (error) {
+      console.error("Failed to navigate to checkout:", error);
+      // Keep cart open on navigation failure
+    }
   };
 
   return (

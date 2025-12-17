@@ -15,13 +15,22 @@ async function getData() {
   const listQuery = `*[_type == "product" && stock > 0] | order(_createdAt desc)[0...10] {
     title, artist, price, "imageUrl": image.asset->url, labelColor, slug, _id, stock
   }`;
-  
-  const [featured, list] = await Promise.all([
-    client.fetch(featuredQuery),
-    client.fetch(listQuery)
-  ]);
 
-  return { featured, list };
+  try {
+    const [featured, list] = await Promise.all([
+      client.fetch(featuredQuery),
+      client.fetch(listQuery)
+    ]);
+
+    return { featured, list };
+  } catch (error) {
+    console.error("Failed to fetch product data:", error);
+    // Return fallback data instead of crashing the page
+    return {
+      featured: null,
+      list: []
+    };
+  }
 }
 
 export default async function Home() {
