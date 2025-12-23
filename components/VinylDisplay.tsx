@@ -64,6 +64,7 @@ export default function VinylDisplay({
                     src={imageUrl} 
                     alt={title}
                     fill
+                    sizes="(max-width: 768px) 256px, 288px"
                     className={`object-cover opacity-90 mix-blend-multiply grayscale contrast-125 transition-all duration-500 ease-in-out ${!isSoldOut && 'group-hover:grayscale-0 group-hover:opacity-100 group-hover:contrast-100'}`}
                 />
             ) : (

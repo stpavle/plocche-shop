@@ -8,27 +8,28 @@ import { X, ZoomIn } from "lucide-react";
 export default function ProductGallery({ mainImage, gallery }: { mainImage: string, gallery: string[] }) {
   const [selectedImage, setSelectedImage] = useState(mainImage);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  
+
   const allImages = [mainImage, ...gallery];
 
   return (
     <>
       <div className="flex flex-col gap-6">
-        
+
         {/* Main Image - Now Clickable */}
-        <div 
+        <div
           className="relative w-full aspect-square bg-worn border border-ink/10 overflow-hidden cursor-zoom-in group"
           onClick={() => setIsLightboxOpen(true)}
         >
           {selectedImage && (
-              <Image 
-                  src={selectedImage} 
-                  alt="Product Shot" 
-                  fill 
-                  className="object-cover transition-all duration-500 group-hover:scale-105"
-              />
+            <Image
+              src={selectedImage}
+              alt="Product Shot"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover transition-all duration-500 group-hover:scale-105"
+            />
           )}
-          
+
           {/* Hint Icon */}
           <div className="absolute top-4 right-4 bg-paper/80 backdrop-blur-sm p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
             <ZoomIn size={20} />
@@ -38,19 +39,18 @@ export default function ProductGallery({ mainImage, gallery }: { mainImage: stri
         {/* Thumbnails */}
         {gallery.length > 0 && (
           <div className="flex gap-4 overflow-x-auto pb-2">
-              {allImages.map((img, idx) => (
-                  <button 
-                      key={idx}
-                      onClick={() => setSelectedImage(img)}
-                      className={`relative w-20 h-20 flex-shrink-0 border transition-all ${
-                          selectedImage === img 
-                          ? "border-accent opacity-100" 
-                          : "border-transparent opacity-50 hover:opacity-100"
-                      }`}
-                  >
-                      <Image src={img} alt="Thumbnail" fill className="object-cover" />
-                  </button>
-              ))}
+            {allImages.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSelectedImage(img)}
+                className={`relative w-20 h-20 flex-shrink-0 border transition-all ${selectedImage === img
+                  ? "border-accent opacity-100"
+                  : "border-transparent opacity-50 hover:opacity-100"
+                  }`}
+              >
+                <Image src={img} alt="Thumbnail" fill sizes="80px" className="object-cover" />
+              </button>
+            ))}
           </div>
         )}
       </div>
@@ -58,7 +58,7 @@ export default function ProductGallery({ mainImage, gallery }: { mainImage: stri
       {/* --- LIGHTBOX MODAL --- */}
       <AnimatePresence>
         {isLightboxOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -72,14 +72,15 @@ export default function ProductGallery({ mainImage, gallery }: { mainImage: stri
 
             {/* Huge Image */}
             <div className="relative w-full h-full max-w-5xl max-h-screen">
-              <Image 
-                src={selectedImage} 
-                alt="Full Screen View" 
-                fill 
-                className="object-contain" 
+              <Image
+                src={selectedImage}
+                alt="Full Screen View"
+                fill
+                sizes="100vw"
+                className="object-contain"
               />
             </div>
-            
+
             <p className="absolute bottom-6 left-0 w-full text-center text-paper/50 font-mono text-xs uppercase">
               Click anywhere to close
             </p>
